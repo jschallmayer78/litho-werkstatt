@@ -1,0 +1,459 @@
+<!doctype html>
+<html lang="de">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Lithophane-Werkstatt</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Atkinson+Hyperlegible:wght@400;700&family=Bricolage+Grotesque:opsz,wght@12..96,500;12..96,700&display=swap" rel="stylesheet">
+<style>
+:root {
+  --paper: #E9EDF1;
+  --surface: #FFFFFF;
+  --ink: #18222E;
+  --muted: #566475;
+  --line: #C5CED8;
+  --amber: #F4A62A;
+  --box: #1B2533;
+  --danger: #B3261E;
+  --radius-s: 6px;
+  --radius-l: 14px;
+  --display: "Bricolage Grotesque", "Avenir Next", "Segoe UI", sans-serif;
+  --body: "Atkinson Hyperlegible", "Segoe UI", system-ui, sans-serif;
+  color-scheme: light;
+}
+@media (prefers-color-scheme: dark) {
+  :root {
+    --paper: #141B24; --surface: #1D2632; --ink: #E5EAF0; --muted: #9AA8B7;
+    --line: #34414F; --box: #0E141C; --danger: #F2827A;
+    color-scheme: dark;
+  }
+}
+* { box-sizing: border-box; }
+html { -webkit-text-size-adjust: 100%; }
+body { margin: 0; background: var(--paper); color: var(--ink); font: 400 17px/1.55 var(--body); }
+.wrap { max-width: 1240px; margin: 0 auto; padding: 32px 24px 64px; }
+header { margin-bottom: 28px; max-width: 46rem; }
+h1 { font: 700 clamp(2rem, 4.2vw, 3.1rem)/1.05 var(--display); letter-spacing: -0.02em; margin: 0 0 10px; }
+header p { margin: 0; color: var(--muted); }
+
+.grid { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1.08fr); gap: 32px; align-items: start; }
+@media (max-width: 900px) { .grid { grid-template-columns: 1fr; } .stage { position: static !important; } }
+
+/* Schritte */
+.steps { list-style: none; margin: 0; padding: 0; counter-reset: step; }
+.step { counter-increment: step; position: relative; padding: 0 0 26px 40px; border-left: 2px solid var(--line); margin-left: 17px; }
+.step:last-child { border-left-color: transparent; padding-bottom: 0; }
+.step::before {
+  content: counter(step); position: absolute; left: -18px; top: -2px;
+  width: 34px; height: 34px; border-radius: 50%; display: grid; place-items: center;
+  font: 700 1rem var(--display); background: var(--surface); border: 2px solid var(--line); color: var(--ink);
+}
+.step.done::before { background: var(--amber); border-color: var(--amber); color: #2B1A00; }
+.step h2 { font: 700 1.3rem/1.2 var(--display); margin: 2px 0 12px; }
+.hint { color: var(--muted); font-size: .92rem; margin: 6px 0 0; }
+
+/* Upload */
+.drop { position: relative; display: block; border: 2px dashed var(--line); border-radius: var(--radius-l); padding: 22px; text-align: center; background: var(--surface); cursor: pointer; }
+.drop:hover, .drop.over { border-color: var(--amber); }
+.drop strong { display: block; font-family: var(--display); font-size: 1.1rem; }
+.drop input { position: absolute; width: 1px; height: 1px; opacity: 0; }
+.drop:focus-within { outline: 3px solid var(--amber); outline-offset: 2px; }
+.thumbs { display: flex; flex-wrap: wrap; gap: 10px; margin: 12px 0 0; padding: 0; list-style: none; }
+.thumbs li { width: 92px; }
+.thumbs img { width: 92px; height: 92px; object-fit: cover; border-radius: var(--radius-s); display: block; border: 1px solid var(--line); }
+.thumbs .ctl { display: flex; justify-content: space-between; margin-top: 4px; }
+.thumbs button { border: 1px solid var(--line); background: var(--surface); color: var(--ink); border-radius: var(--radius-s); width: 28px; height: 26px; cursor: pointer; font-size: .85rem; padding: 0; }
+.thumbs button:disabled { opacity: .35; cursor: default; }
+
+/* Auswahl */
+.seg { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 10px; border: 0; padding: 0; margin: 0; min-width: 0; }
+.seg legend { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); }
+.opt { position: relative; }
+.opt input { position: absolute; opacity: 0; inset: 0; }
+.opt span { display: block; height: 100%; padding: 12px 14px; border-radius: var(--radius-s); background: var(--surface); border: 2px solid var(--line); cursor: pointer; }
+.opt b { display: block; font-family: var(--display); font-size: 1.02rem; }
+.opt small { color: var(--muted); font-size: .85rem; line-height: 1.35; display: block; margin-top: 2px; }
+.opt input:checked + span { border-color: var(--amber); box-shadow: inset 0 0 0 1px var(--amber); }
+.opt input:focus-visible + span { outline: 3px solid var(--amber); outline-offset: 2px; }
+
+.fields { display: grid; grid-template-columns: repeat(auto-fit, minmax(160px, 1fr)); gap: 12px 16px; margin-top: 14px; }
+label.f { display: block; font-size: .92rem; color: var(--muted); }
+label.f input, label.f select { display: block; width: 100%; margin-top: 4px; font: inherit; color: var(--ink); background: var(--surface); border: 1px solid var(--line); border-radius: var(--radius-s); padding: 8px 10px; }
+.check { display: flex; gap: 10px; align-items: flex-start; margin-top: 12px; }
+.check input { width: 20px; height: 20px; margin-top: 3px; accent-color: var(--amber); flex: none; }
+input:focus-visible, select:focus-visible, button:focus-visible, summary:focus-visible, a:focus-visible { outline: 3px solid var(--amber); outline-offset: 2px; }
+.sub { margin-top: 16px; }
+
+/* Palette */
+.palette { list-style: none; padding: 0; margin: 12px 0 0; display: grid; gap: 8px; }
+.palette li { display: grid; grid-template-columns: 26px 46px minmax(0, 1fr); gap: 10px; align-items: center; }
+.palette .no { font: 700 .95rem var(--display); color: var(--muted); text-align: right; }
+.palette input[type=color] { width: 46px; height: 36px; border: 1px solid var(--line); border-radius: var(--radius-s); padding: 2px; background: var(--surface); }
+.palette input[type=text] { font: inherit; color: var(--ink); background: var(--surface); border: 1px solid var(--line); border-radius: var(--radius-s); padding: 7px 10px; min-width: 0; }
+
+details { margin-top: 18px; border-top: 1px solid var(--line); padding-top: 12px; }
+summary { cursor: pointer; font-family: var(--display); font-weight: 700; }
+
+.go { margin-top: 4px; width: 100%; font: 700 1.15rem var(--display); padding: 15px 20px; border: 0; border-radius: var(--radius-s); cursor: pointer; background: var(--ink); color: var(--paper); }
+.go:disabled { opacity: .55; cursor: progress; }
+.error { color: var(--danger); margin: 10px 0 0; font-weight: 700; }
+
+/* Lichtkasten */
+.stage { position: sticky; top: 20px; }
+.box { background: var(--box); border-radius: var(--radius-l); min-height: 440px; display: grid; place-items: center; padding: 36px 24px 28px; overflow: hidden; position: relative; }
+.box::after {
+  content: ""; position: absolute; left: 50%; bottom: -130px; width: 560px; height: 280px;
+  transform: translateX(-50%); border-radius: 50%; pointer-events: none;
+  background: radial-gradient(closest-side, rgba(244,166,42,.35), rgba(244,166,42,0));
+  opacity: 0; transition: opacity .8s;
+}
+.box.lit::after { opacity: 1; }
+.empty { color: #9FB0C2; text-align: center; max-width: 22rem; }
+.empty strong { display: block; color: #E7EDF3; font: 700 1.25rem var(--display); margin-bottom: 6px; }
+#view { width: 100%; display: grid; justify-items: center; position: relative; z-index: 1; }
+
+.lamp-wrap { display: flex; flex-direction: column; align-items: center; }
+.lamp {
+  width: var(--w); height: var(--h); position: relative;
+  background-image: var(--img); background-repeat: repeat-x; background-size: var(--circ) 100%;
+  animation: spin 40s linear infinite; box-shadow: 0 0 70px rgba(255, 196, 110, .35);
+}
+.lamp::after {
+  content: ""; position: absolute; inset: 0;
+  background: linear-gradient(90deg, rgba(0,0,0,.62), rgba(0,0,0,0) 28%, rgba(255,255,255,.07) 50%, rgba(0,0,0,0) 72%, rgba(0,0,0,.62));
+}
+.cap { width: calc(var(--w) + 12px); height: 9px; background: #D7DCE2; border-radius: 3px; }
+.cap.bottom { height: 15px; border-radius: 3px 3px 6px 6px; }
+@keyframes spin { from { background-position: 0 0; } to { background-position: calc(-1 * var(--circ)) 0; } }
+@media (prefers-reduced-motion: reduce) { .lamp { animation: none; } }
+
+.plates { display: flex; flex-wrap: wrap; gap: 18px; justify-content: center; }
+.plates img { max-width: 100%; max-height: 380px; border-radius: 4px; box-shadow: 0 0 50px rgba(255, 196, 110, .3); }
+.flatview { margin-top: 22px; width: 100%; }
+.flatview img { width: 100%; border-radius: 4px; display: block; }
+.flatview p { color: #9FB0C2; font-size: .85rem; margin: 6px 0 0; text-align: center; }
+
+.result { background: var(--surface); border: 1px solid var(--line); border-radius: var(--radius-l); padding: 20px; margin-top: 16px; }
+.dl { display: flex; justify-content: space-between; align-items: center; gap: 12px; text-decoration: none; background: var(--amber); color: #2B1A00; border-radius: var(--radius-s); padding: 14px 18px; font: 700 1.1rem var(--display); }
+.dl span { font: 400 .9rem var(--body); }
+.legend { list-style: none; margin: 16px 0 0; padding: 0; display: grid; gap: 6px; }
+.legend li { display: grid; grid-template-columns: 22px minmax(0, 1fr) auto; gap: 10px; align-items: center; }
+.legend .sw { width: 22px; height: 22px; border-radius: 50%; border: 1px solid var(--line); }
+.legend .pc { color: var(--muted); font-variant-numeric: tabular-nums; }
+.stats { display: flex; flex-wrap: wrap; gap: 6px 22px; margin: 14px 0 0; color: var(--muted); font-size: .92rem; }
+.stats b { color: var(--ink); font-weight: 700; }
+.result h3 { font: 700 1.05rem var(--display); margin: 18px 0 4px; }
+.result ol { margin: 4px 0 0; padding-left: 1.2rem; }
+[hidden] { display: none !important; }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <h1>Lithophane-Werkstatt</h1>
+    <p>Aus deinen Fotos wird ein 3D-Druck, der erst im Gegenlicht sein Bild zeigt. Als Lampenschirm oder flache Platte, in Weiß oder in Farbe.</p>
+  </header>
+
+  <div class="grid">
+    <form id="form" novalidate>
+      <ol class="steps">
+        <li class="step" id="s1">
+          <h2>Bilder hochladen</h2>
+          <label class="drop" id="drop">
+            <input type="file" id="files" accept="image/*" multiple>
+            <strong>Bilder auswählen oder hierher ziehen</strong>
+            <span class="hint">JPG, PNG oder WebP, bis zu 6 Bilder</span>
+          </label>
+          <ul class="thumbs" id="thumbs"></ul>
+          <p class="hint" id="orderHint" hidden>Beim Lampenschirm laufen die Bilder in dieser Reihenfolge einmal rundherum.</p>
+          <p class="hint" id="plateHint" hidden>Jedes Bild wird zu einer eigenen Platte.</p>
+        </li>
+
+        <li class="step done">
+          <h2>Form wählen</h2>
+          <fieldset class="seg">
+            <legend>Form</legend>
+            <label class="opt"><input type="radio" name="shape" value="cylinder" checked><span><b>Lampenschirm</b><small>Rund, für eine LED-Lichtquelle darunter</small></span></label>
+            <label class="opt"><input type="radio" name="shape" value="flat"><span><b>Flache Platte</b><small>Fürs Fenster oder einen Leuchtrahmen</small></span></label>
+          </fieldset>
+          <div class="fields" data-for="cylinder">
+            <label class="f">Durchmesser der Lichtquelle (mm)<input type="number" id="light_d" value="83" min="30" max="200" step="0.5"></label>
+            <label class="f">Höhe (mm)<input type="number" id="height" value="120" min="30" max="250" step="1"></label>
+            <label class="f">Außen-Ø der ganzen Lampe (mm)<input type="number" id="total_d" placeholder="automatisch" min="35" max="260" step="0.5"></label>
+          </div>
+          <p class="hint" data-for="cylinder">Leer lassen, dann richtet sich die Lampe nach der Lichtquelle. Mit einem Wert wird der Lampenschirm so bemessen, dass die breiteste Stelle (Boden und Deckel, sonst der Schirm) genau diesen Durchmesser hat.</p>
+          <div data-for="cylinder">
+            <label class="check"><input type="checkbox" id="enclosure" checked><span>Boden und Deckel zum Aufschrauben mit erzeugen</span></label>
+            <div class="fields" id="pocketRow">
+              <label class="f">Bodenstärke (mm)<input type="number" id="floor" value="4.5" min="1.5" max="25" step="0.5"></label>
+              <label class="f">Tiefe der Vertiefung (mm)<input type="number" id="pocket_depth" value="3" min="0" max="20" step="0.5"></label>
+            </div>
+            <label class="check" id="cableRow"><input type="checkbox" id="cable" checked><span>Kabelkanal im Boden</span></label>
+            <p class="hint" id="pocketHint">Lampenschirm, Boden und Deckel bekommen ein Gewinde und werden einfach aufgeschraubt. Die Lichtquelle liegt in einer Vertiefung im Boden; unter ihr bleibt mindestens 1 mm Material, die Vertiefung darf also höchstens Bodenstärke minus 1 mm tief sein. 0 mm bedeutet: keine Vertiefung.</p>
+          </div>
+          <div class="fields" data-for="flat" hidden>
+            <label class="f">Breite der Platte (mm)<input type="number" id="width" value="120" min="30" max="250" step="1"></label>
+          </div>
+        </li>
+
+        <li class="step done">
+          <h2>Farbe wählen</h2>
+          <fieldset class="seg">
+            <legend>Farbe</legend>
+            <label class="opt"><input type="radio" name="color_mode" value="mono" checked><span><b>Einfarbig</b><small>Klassisch in Weiß, für jeden Drucker</small></span></label>
+            <label class="opt"><input type="radio" name="color_mode" value="multi"><span><b>Mehrfarbig</b><small>Braucht einen Mehrfarbdrucker (AMS, MMU …)</small></span></label>
+          </fieldset>
+
+          <div id="multiBox" hidden>
+            <fieldset class="seg sub" id="methodBox" hidden>
+              <legend>Verfahren</legend>
+              <label class="opt"><input type="radio" name="flat_method" value="cmy" checked><span><b>Farbmischung</b><small>Weiß, Cyan, Magenta und Gelb in Schichten. Beste Farbtreue, immer 4 Filamente</small></span></label>
+              <label class="opt"><input type="radio" name="flat_method" value="mosaic"><span><b>Eigene Farben</b><small>Mosaik aus den Filamenten, die du hast</small></span></label>
+            </fieldset>
+            <div id="paletteBox" class="sub">
+              <label class="f" style="max-width:240px">Anzahl Filamente (inklusive Weiß)
+                <select id="count"></select>
+              </label>
+              <ul class="palette" id="palette"></ul>
+              <p class="hint">Stell die Farben so ein, wie deine Filamente aussehen. Filament 1 ist immer Weiß, daraus entsteht das Relief.</p>
+            </div>
+          </div>
+
+          <details>
+            <summary>Feineinstellungen</summary>
+            <div class="fields">
+              <label class="f">Detailgrad
+                <select id="quality"><option value="schnell">Schnell, kleinere Datei</option><option value="normal" selected>Normal</option><option value="fein">Fein, große Datei</option></select>
+              </label>
+              <label class="f" data-for="cylinder">Innen-Ø Lampenschirm (mm)<input type="number" id="shade_d" placeholder="automatisch" min="31" max="220" step="0.5"></label>
+              <label class="f" data-for="cylinder">Gewindespiel (mm)<input type="number" id="thread_clearance" value="0.4" min="0.1" max="1" step="0.05"></label>
+              <label class="f">Voller Rand (mm)<input type="number" id="border" value="3" min="1" max="15" step="0.5"></label>
+              <label class="f">Wand dünnste Stelle (mm)<input type="number" id="min_t" placeholder="automatisch" min="0.3" max="3" step="0.1"></label>
+              <label class="f">Wand dickste Stelle (mm)<input type="number" id="max_t" placeholder="automatisch" min="1" max="6" step="0.1"></label>
+              <label class="f">Helligkeitskurve<input type="number" id="gamma" value="1.0" min="0.4" max="2.5" step="0.05"></label>
+              <label class="f" data-multi>Farbsättigung<input type="number" id="saturation" value="1.2" min="0.5" max="2.5" step="0.05"></label>
+              <label class="f" data-cmy hidden>Farbschicht max. (mm)<input type="number" id="color_max" value="0.6" min="0.2" max="1.5" step="0.1"></label>
+              <label class="f" data-cmy hidden>Gelbschicht max. (mm)<input type="number" id="yellow_max" placeholder="wie Farbschicht" min="0.2" max="1.5" step="0.1"></label>
+            </div>
+            <label class="check"><input type="checkbox" id="autocontrast"><span>Kontrast automatisch verbessern</span></label>
+            <label class="check" data-mosaic><input type="checkbox" id="dither"><span>Weichere Farbübergänge (mehr Farbwechsel beim Druck)</span></label>
+            <p class="hint">Gewindespiel: größer, wenn das Gewinde zu stramm läuft, kleiner, wenn es wackelt. Mit Gewinde ist der volle Rand mindestens 8,5 mm hoch.</p>
+            <p class="hint">Eine Helligkeitskurve unter 1 hellt Mitteltöne auf, über 1 dunkelt sie ab.</p>
+          </details>
+        </li>
+
+        <li class="step" id="s4">
+          <h2>Modell erzeugen</h2>
+          <button type="submit" class="go" id="go">Modell erzeugen</button>
+          <p class="error" id="error" role="alert" hidden></p>
+          <p class="hint" id="status" aria-live="polite"></p>
+        </li>
+      </ol>
+    </form>
+
+    <section class="stage" aria-label="Vorschau">
+      <div class="box" id="box">
+        <div class="empty" id="empty"><strong>Hier leuchtet gleich dein Modell</strong>Lade ein Bild hoch und erzeuge das Modell. Die Vorschau zeigt, wie es im Gegenlicht aussieht.</div>
+        <div id="view" hidden></div>
+      </div>
+      <div class="result" id="result" hidden>
+        <a class="dl" id="dl" href="#" download>3MF herunterladen <span id="dlsize"></span></a>
+        <ul class="legend" id="legend"></ul>
+        <div class="stats" id="stats"></div>
+        <h3>So geht es weiter</h3>
+        <ol id="howto"></ol>
+      </div>
+    </section>
+  </div>
+</div>
+
+<script>
+const DEFAULTS = [
+  ["Weiß", "#FFFFFF"], ["Gelb", "#FFE100"], ["Rot", "#E0201B"], ["Blau", "#0A50D2"],
+  ["Grün", "#00A651"], ["Magenta", "#EC008C"], ["Cyan", "#00AEEF"], ["Orange", "#FF7A00"]
+];
+const $ = (s) => document.querySelector(s);
+const $$ = (s) => [...document.querySelectorAll(s)];
+const esc = (s) => String(s).replace(/[&<>"']/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
+const pct = (v) => String(v).replace(".", ",") + " %";
+const val = (name) => document.querySelector(`input[name=${name}]:checked`).value;
+let files = [];
+let palette = DEFAULTS.slice(0, 5).map(([name, color]) => ({ name, color }));
+
+/* Upload */
+function addFiles(list) {
+  files = files.concat([...list].filter(f => f.type.startsWith("image/"))).slice(0, 6);
+  renderThumbs();
+}
+function renderThumbs() {
+  const ul = $("#thumbs");
+  ul.innerHTML = "";
+  files.forEach((f, i) => {
+    const li = document.createElement("li");
+    const url = URL.createObjectURL(f);
+    li.innerHTML = `<img alt="${esc(f.name)}" src="${url}">
+      <div class="ctl">
+        <button type="button" data-a="l" aria-label="Nach vorne" ${i === 0 ? "disabled" : ""}>‹</button>
+        <button type="button" data-a="x" aria-label="Entfernen">✕</button>
+        <button type="button" data-a="r" aria-label="Nach hinten" ${i === files.length - 1 ? "disabled" : ""}>›</button>
+      </div>`;
+    li.querySelector("img").onload = () => URL.revokeObjectURL(url);
+    li.addEventListener("click", (e) => {
+      const a = e.target.dataset.a;
+      if (!a) return;
+      if (a === "x") files.splice(i, 1);
+      if (a === "l") [files[i - 1], files[i]] = [files[i], files[i - 1]];
+      if (a === "r") [files[i + 1], files[i]] = [files[i], files[i + 1]];
+      renderThumbs();
+    });
+    ul.appendChild(li);
+  });
+  $("#s1").classList.toggle("done", files.length > 0);
+  sync();
+}
+$("#files").addEventListener("change", (e) => { addFiles(e.target.files); e.target.value = ""; });
+const drop = $("#drop");
+["dragenter", "dragover"].forEach(t => drop.addEventListener(t, e => { e.preventDefault(); drop.classList.add("over"); }));
+["dragleave", "drop"].forEach(t => drop.addEventListener(t, e => { e.preventDefault(); drop.classList.remove("over"); }));
+drop.addEventListener("drop", e => addFiles(e.dataTransfer.files));
+
+/* Palette */
+const count = $("#count");
+for (let n = 2; n <= 8; n++) count.add(new Option(String(n), n, false, n === 5));
+count.addEventListener("change", () => {
+  const n = +count.value;
+  while (palette.length < n) { const d = DEFAULTS[palette.length]; palette.push({ name: d[0], color: d[1] }); }
+  palette = palette.slice(0, n);
+  renderPalette();
+});
+function renderPalette() {
+  const ul = $("#palette");
+  ul.innerHTML = "";
+  palette.forEach((p, i) => {
+    const li = document.createElement("li");
+    li.innerHTML = `<span class="no">${i + 1}</span>
+      <input type="color" value="${p.color}" aria-label="Farbe Filament ${i + 1}" ${i === 0 ? "disabled" : ""}>
+      <input type="text" value="${esc(p.name)}" maxlength="30" aria-label="Name Filament ${i + 1}">`;
+    li.querySelector("[type=color]").addEventListener("input", e => p.color = e.target.value.toUpperCase());
+    li.querySelector("[type=text]").addEventListener("input", e => p.name = e.target.value);
+    ul.appendChild(li);
+  });
+}
+renderPalette();
+
+/* Sichtbarkeit */
+function sync() {
+  const shape = val("shape"), multi = val("color_mode") === "multi";
+  const cmy = shape === "flat" && val("flat_method") === "cmy";
+  $$("[data-for]").forEach(el => el.hidden = el.dataset.for !== shape);
+  ["#cableRow", "#pocketRow", "#pocketHint"].forEach(s => $(s).hidden = !$("#enclosure").checked);
+  $("#multiBox").hidden = !multi;
+  $("#methodBox").hidden = shape !== "flat";
+  $("#paletteBox").hidden = cmy;
+  $$("[data-cmy]").forEach(el => el.hidden = !(multi && cmy));
+  $$("[data-multi]").forEach(el => el.hidden = !multi);
+  $$("[data-mosaic]").forEach(el => el.hidden = !(multi && !cmy));
+  $("#orderHint").hidden = !(files.length > 1 && shape === "cylinder");
+  $("#plateHint").hidden = !(files.length > 1 && shape === "flat");
+}
+$$("input[type=radio], #enclosure").forEach(el => el.addEventListener("change", sync));
+sync();
+
+/* Erzeugen */
+const num = (id) => { const v = $("#" + id).value; return v === "" ? null : +v; };
+function options() {
+  return {
+    shape: val("shape"), color_mode: val("color_mode"), flat_method: val("flat_method"),
+    palette: palette.map(p => ({ name: p.name.trim() || "Farbe", color: p.color })),
+    quality: $("#quality").value, light_d: num("light_d"), shade_d: num("shade_d"), total_d: num("total_d"), pocket_depth: num("pocket_depth") ?? 0, floor: num("floor") ?? 4.5, thread_clearance: num("thread_clearance") ?? 0.4, height: num("height"), width: num("width"),
+    enclosure: $("#enclosure").checked, cable: $("#cable").checked, border: num("border"),
+    min_t: num("min_t"), max_t: num("max_t"), gamma: num("gamma") ?? 1, saturation: num("saturation") ?? 1.2,
+    color_max: num("color_max") ?? 0.6, yellow_max: num("yellow_max"),
+    autocontrast: $("#autocontrast").checked, dither: $("#dither").checked,
+  };
+}
+
+function errorText(j) {
+  if (typeof j.detail === "string") return j.detail;
+  return "Das Modell konnte nicht erzeugt werden. Prüfe die Zahlen in den Einstellungen.";
+}
+
+$("#form").addEventListener("submit", async (e) => {
+  e.preventDefault();
+  const err = $("#error");
+  err.hidden = true;
+  if (!files.length) { err.textContent = "Lade zuerst mindestens ein Bild hoch."; err.hidden = false; return; }
+  const opts = options();
+  const fd = new FormData();
+  files.forEach(f => fd.append("files", f, f.name));
+  fd.append("options", JSON.stringify(opts));
+
+  const go = $("#go"), status = $("#status");
+  go.disabled = true; go.textContent = "Modell wird erzeugt …";
+  const t0 = Date.now();
+  const tick = setInterval(() => status.textContent = `Läuft seit ${Math.round((Date.now() - t0) / 1000)} s`, 1000);
+  try {
+    const r = await fetch("api/generate", { method: "POST", body: fd });
+    const j = await r.json().catch(() => ({}));
+    if (!r.ok) throw new Error(errorText(j));
+    show(j, opts);
+    status.textContent = `Modell erzeugt in ${Math.round((Date.now() - t0) / 1000)} s`;
+    $("#s4").classList.add("done");
+  } catch (ex) {
+    err.textContent = ex.message === "Failed to fetch" ? "Der Server ist nicht erreichbar." : ex.message;
+    err.hidden = false; status.textContent = "";
+  } finally {
+    clearInterval(tick); go.disabled = false; go.textContent = "Modell erzeugen";
+  }
+});
+
+function show(j, o) {
+  const view = $("#view");
+  $("#empty").hidden = true; view.hidden = false; $("#box").classList.add("lit");
+  if (o.shape === "cylinder") {
+    const outer = parseFloat(j.stats["Außen-Ø max."]);
+    const avail = view.clientWidth || 400;
+    let w = Math.min(240, avail * 0.6), h = w * o.height / outer;
+    if (h > 330) { h = 330; w = h * outer / o.height; }
+    const cap = o.enclosure ? "" : " hidden";
+    view.innerHTML = `<div class="lamp-wrap" style="--w:${w}px">
+        <div class="cap top"${cap}></div>
+        <div class="lamp" role="img" aria-label="Vorschau des Lampenschirms im Gegenlicht"
+             style="--h:${h}px; --circ:${Math.PI * w}px; --img:url('${j.previews[0]}')"></div>
+        <div class="cap bottom"${cap}></div>
+      </div>
+      <div class="flatview"><img alt="Abgewickelte Außenseite des Lampenschirms" src="${j.previews[0]}"><p>Abgewickelt: die ganze Außenseite auf einen Blick</p></div>`;
+  } else {
+    view.innerHTML = `<div class="plates">${j.previews.map((p, i) => `<img alt="Vorschau Platte ${i + 1} im Gegenlicht" src="${p}">`).join("")}</div>`;
+  }
+
+  const dl = $("#dl");
+  dl.href = `api/download/${j.id}?name=${encodeURIComponent(j.filename)}`;
+  dl.setAttribute("download", j.filename);
+  $("#dlsize").textContent = `${String(j.size_mb).replace(".", ",")} MB`;
+
+  const many = j.legend.length > 1;
+  $("#legend").innerHTML = j.legend.map(l =>
+    `<li><span class="sw" style="background:${l.color}"></span><span>Filament ${l.slot}: ${esc(l.name)}</span>
+     <span class="pc">${!many ? "" : l.slot !== 1 ? pct(l.share) : (l.share > 0 && l.share < 100 ? "Relief + " + pct(l.share) : "Relief")}</span></li>`).join("");
+  $("#stats").innerHTML = Object.entries(j.stats).map(([k, v]) => `<span>${esc(k)} <b>${esc(v)}</b></span>`).join("");
+
+  const steps = ["Öffne die 3MF-Datei in PrusaSlicer, Orca Slicer oder Bambu Studio."];
+  if (many) {
+    steps.push("Lege die Filamente wie oben aufgelistet ein. Die Teile sind ihren Filament-Plätzen schon zugeordnet; übernimmt dein Slicer das nicht, weise sie in der Objektliste zu.");
+    steps.push(o.shape === "flat" && o.flat_method === "cmy"
+      ? "Schichthöhe 0,1 mm, möglichst auch für die erste Schicht."
+      : "Schichthöhe 0,12 bis 0,16 mm.");
+  } else {
+    steps.push("Schichthöhe 0,12 bis 0,16 mm, weißes PLA.");
+  }
+  steps.push("Füllung 100 %, keine Stützen. " + (o.shape === "cylinder" ? "Den Lampenschirm aufrecht drucken." : "Die Platte liegend drucken."));
+  $("#howto").innerHTML = steps.map(s => `<li>${s}</li>`).join("");
+  $("#result").hidden = false;
+  if (window.matchMedia("(max-width: 900px)").matches) $("#box").scrollIntoView({ behavior: "smooth" });
+}
+</script>
+</body>
+</html>

@@ -1,0 +1,14 @@
+services:
+  lithophane:
+    build: .
+    container_name: lithophane
+    restart: unless-stopped
+    ports:
+      - "8080:8080"
+    environment:
+      MAX_FILES: "6"        # max. Bilder pro Auftrag
+      MAX_FILE_MB: "25"     # max. Größe je Bild
+      MAX_PARALLEL: "2"     # gleichzeitige Berechnungen
+      KEEP_MINUTES: "60"    # so lange bleiben fertige 3MF-Dateien abrufbar
+    tmpfs:
+      - /data:uid=1000,gid=1000,mode=0750
